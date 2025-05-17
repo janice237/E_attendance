@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Course Management</title>
+    <link rel="stylesheet" href="../styles/style.css">
+</head>
+<body>
+    <header>
+        <h1>Course Management</h1>
+        <nav>
+            <a href="welcome.html">Home</a>
+            <a href="students.html">Students</a>
+            <a href="exams.html">Exams</a>
+            <a href="reports.html">Reports</a>
+        </nav>
+    </header>
+    
+    <main>
+        <h2>Available Courses</h2>
+        <table id="courseTable">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Name</th>
+                    <th>Description</th>
+                    <th>Credits</th>
+                    <th>Instructor</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                <!-- Course data will be inserted here dynamically -->
+            </tbody>
+        </table>
+
+        <h2>Add/Edit Course</h2>
+        <form id="courseForm">
+            <input type="hidden" id="courseId">
+            <label for="name">Name:</label>
+            <input type="text" id="name" required>
+            
+            <label for="description">Description:</label>
+            <input type="text" id="description" required>
+            
+            <label for="credits">Credits:</label>
+            <input type="number" id="credits" required>
+            
+            <label for="instructor">Instructor ID:</label>
+            <input type="text" id="instructor" required>
+            
+            <button type="submit">Save Course</button>
+            <input type="hidden" id="courseId">
+            <button type="submit" id="course-form-button">Add Course</button>
+
+        </form>
+
+    </main>
+    <table>
+        <thead>
+            <tr>
+                <th>Name</th>
+                <th>Description</th>
+                <th>Credits</th>
+                <th>Instructor</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody id="course-list">
+            <!-- Courses will be dynamically loaded here -->
+        </tbody>
+    </table>
+    
+    <script src="../js/courses.js"></script>
+</body>
+</html>
