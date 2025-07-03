@@ -33,7 +33,7 @@ const User = sequelize.define('User', {
 // Define Attendance model
 const Attendance = sequelize.define('Attendance', {
     userId: {
-        type: DataTypes.STRING,
+        type: DataTypes.INTEGER,
         allowNull: false
     },
     courseId: {
@@ -167,7 +167,7 @@ const Notification = sequelize.define('Notification', {
 // Define CourseRegistration model
 const CourseRegistration = sequelize.define('CourseRegistration', {
     userId: {
-        type: DataTypes.STRING,
+        type: DataTypes.INTEGER, // changed from STRING to INTEGER
         allowNull: false
     },
     courseId: {
@@ -175,6 +175,11 @@ const CourseRegistration = sequelize.define('CourseRegistration', {
         allowNull: false
     }
 });
+
+// Add associations for joins
+CourseRegistration.belongsTo(Course, { foreignKey: 'courseId', as: 'Course' });
+Course.hasMany(CourseRegistration, { foreignKey: 'courseId', as: 'Registrations' });
+CourseRegistration.belongsTo(User, { foreignKey: 'userId', as: 'Student' });
 
 // Sync models with database (alter: true will update tables without dropping them)
 sequelize.sync({ alter: true })
