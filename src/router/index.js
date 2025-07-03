@@ -1,20 +1,76 @@
 import { createRouter, createWebHistory } from 'vue-router'
-import HomeView from '../views/HomeView.vue'
+import RegisterView from '../views/RegisterView.vue'
+import LoginView from '../views/Login.vue'
+import Dashboard from '../views/Dashboard.vue'
+import Attendance from '../views/Attendance.vue'
+import Analytics from '../views/Analytics.vue'
+import StudentCourses from '../views/StudentCourses.vue';
+import Courses from '../views/Courses.vue';
+import StudentDashboard from '../views/StudentDashboard.vue';
+import LecturerAttendance from '../views/LecturerAttendance.vue';
+import StudentRecords from '../views/StudentRecords.vue';
 
 const routes = [
   {
     path: '/',
-    name: 'home',
-    component: HomeView
+    name: 'register',
+    component: RegisterView
   },
   {
-    path: '/about',
-    name: 'about',
-    // route level code-splitting
-    // this generates a separate chunk (about.[hash].js) for this route
-    // which is lazy-loaded when the route is visited.
-    component: () => import(/* webpackChunkName: "about" */ '../views/AboutView.vue')
-  }
+    path: '/register',
+    name: 'register-alias',
+    component: RegisterView
+  },
+  {
+    path: '/login',
+    name: 'login',
+    component: LoginView
+  },
+  {
+    path: '/student-dashboard',
+    name: 'StudentDashboard',
+    component: StudentDashboard,
+  },
+  {
+  path: '/dashboard',
+  name: 'Dashboard',
+  component: Dashboard,
+},
+{
+  path: '/student-courses',
+  name: 'StudentCourses',
+  component: StudentCourses,
+},
+{
+  path: '/course-management',
+  name: 'Courses',
+  component: Courses,
+},
+{
+  path: '/attendance',
+  name: 'Attendance',
+  component: Attendance,
+},
+{
+  path:'/record',
+  name: 'Record',
+  component: StudentRecords,
+},
+{
+  path: '/analytics',
+  name: 'Analytics',
+  component: Analytics,
+},
+{
+  path: '/lecturer-attendance',
+  name: 'LecturerAttendance',
+  component: LecturerAttendance,
+},
+{
+  path: '/timetable',
+  name: 'Timetable',
+  component: () => import('../views/Timetable.vue'),
+}
 ]
 
 const router = createRouter({
