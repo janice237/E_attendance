@@ -62,6 +62,24 @@ const Attendance = sequelize.define('Attendance', {
     }
 });
 
+// Define Classroom model
+const Classroom = sequelize.define('Classroom', {
+  name: {
+    type: DataTypes.STRING,
+    allowNull: false,
+    unique: true
+  },
+  nfcId: {
+    type: DataTypes.STRING,
+    allowNull: false,
+    unique: true
+  },
+  qrLink: {
+    type: DataTypes.STRING,
+    allowNull: true
+  }
+});
+
 // Define Course model
 const Course = sequelize.define('Course', {
   code: {
@@ -89,14 +107,13 @@ const Course = sequelize.define('Course', {
     type: DataTypes.INTEGER,
     allowNull: false
   },
-  location: {
-    type: DataTypes.STRING,
-    allowNull: false
-  },
-  // Renamed from 'name' to 'classroom'
-  classroom: {
-    type: DataTypes.STRING,
-    allowNull: true
+  // Relationship: each course belongs to a classroom
+  classroomId: {
+    type: DataTypes.INTEGER,
+    allowNull: false,
+    references: { model: 'Classrooms', key: 'id' },
+    onUpdate: 'CASCADE',
+    onDelete: 'SET NULL'
   },
   days: {
     type: DataTypes.ARRAY(DataTypes.STRING),
@@ -176,10 +193,14 @@ const CourseRegistration = sequelize.define('CourseRegistration', {
     }
 });
 
+
 // Add associations for joins
 CourseRegistration.belongsTo(Course, { foreignKey: 'courseId', as: 'Course' });
 Course.hasMany(CourseRegistration, { foreignKey: 'courseId', as: 'Registrations' });
 CourseRegistration.belongsTo(User, { foreignKey: 'userId', as: 'Student' });
+// Classroom <-> Course relationship
+Classroom.hasMany(Course, { foreignKey: 'classroomId', as: 'Courses', onUpdate: 'CASCADE', onDelete: 'SET NULL' });
+Course.belongsTo(Classroom, { foreignKey: 'classroomId', as: 'Classroom', onUpdate: 'CASCADE', onDelete: 'SET NULL' });
 
 // Sync models with database (alter: true will update tables without dropping them)
 sequelize.sync({ alter: true })
@@ -187,4 +208,4 @@ sequelize.sync({ alter: true })
     .catch(err => console.error('Error updating database tables:', err));
 
 // Export models and sequelize instance
-module.exports = { sequelize, User, Attendance, Course, CatchupClass, Notification, CourseRegistration };
+module.exports = { sequelize, User, Attendance, Course, CatchupClass, Notification, CourseRegistration, Classroom };

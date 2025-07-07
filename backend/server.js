@@ -1,13 +1,14 @@
-// ...existing code...
 const express = require('express');
 const app = express();
 const cors = require('cors');
 const bodyParser = require('body-parser');
 const bcrypt = require('bcrypt');
-const { sequelize, User, Attendance, Course, CatchupClass, Notification, CourseRegistration } = require('./models');
+const { sequelize, User, Attendance, Course, CatchupClass, Notification, CourseRegistration, Classroom } = require('./models');
 const jwt = require('jsonwebtoken');
 require('dotenv').config();
 const port = process.env.PORT || 3000;
+
+// Middleware definitions
 
 const allowedOrigins = ['http://localhost:8080']; // Revert to only allow localhost frontend
 
@@ -47,7 +48,10 @@ app.post('/register', async (req, res) => {
     if (!username || !password || !role) {
         return res.status(400).json({ error: 'Username, password, and role are required.' });
     }
-    if (!['student', 'lecturer', 'administrator'].includes(role)) {
+    // Accept both 'admin' and 'administrator' from frontend, normalize to 'administrator'
+    let normalizedRole = role;
+    if (role === 'admin') normalizedRole = 'administrator';
+    if (!['student', 'lecturer', 'administrator'].includes(normalizedRole)) {
         return res.status(400).json({ error: 'Invalid role' });
     }
     try {
@@ -58,8 +62,8 @@ app.post('/register', async (req, res) => {
         }
         // Hash the password
         const hashedPassword = await bcrypt.hash(password, 10);
-        // Create user in the database
-        await User.create({ username, password: hashedPassword, role });
+        // Create user in the database with normalizedRole
+        await User.create({ username, password: hashedPassword, role: normalizedRole });
         res.status(201).json({ message: 'User registered successfully' });
     } catch (err) {
         console.error('Registration error:', err); // Log the actual error for debugging
@@ -119,7 +123,9 @@ app.get('/protected', authenticateToken, (req, res) => {
 // GET all courses from the database (public, no auth required)
 app.get('/public-courses', async (req, res) => {
     try {
-        const courses = await Course.findAll();
+        const courses = await Course.findAll({
+          include: [{ model: Classroom, as: 'Classroom' }]
+        });
         res.json(courses);
     } catch (err) {
         console.error('Error fetching courses:', err);
@@ -130,8 +136,10 @@ app.get('/public-courses', async (req, res) => {
 // GET all courses from the database
 app.get('/courses', authenticateToken, async (req, res) => {
     try {
-        // Fetch all courses using Sequelize (all fields)
-        const courses = await Course.findAll();
+        // Fetch all courses with classroom details
+        const courses = await Course.findAll({
+          include: [{ model: Classroom, as: 'Classroom' }]
+        });
         res.json(courses);
     } catch (err) {
         res.status(500).json({ error: 'Failed to fetch courses' });
@@ -140,27 +148,15 @@ app.get('/courses', authenticateToken, async (req, res) => {
 
 // POST a new course to the database (Lecturer/Admin only)
 app.post('/courses', authenticateToken, authorizeRole(['lecturer', 'administrator']), async (req, res) => {
-    // Validate input: require code, title, lecturer, credits, hours, location, classroom
-    const requiredFields = ['code', 'title', 'lecturer', 'credits', 'hours', 'location', 'classroom'];
+    // Validate input: require code, title, lecturer, credits, hours, location, classroomId
+    const requiredFields = ['code', 'title', 'lecturer', 'credits', 'hours', 'location', 'classroomId'];
     for (const field of requiredFields) {
-        if (!req.body[field] || (typeof req.body[field] === 'string' && req.body[field].trim() === '')) {
+        if (req.body[field] === undefined || req.body[field] === null || (typeof req.body[field] === 'string' && req.body[field].trim() === '')) {
             return res.status(400).json({ error: `Course ${field} is required.` });
         }
     }
     try {
-        // Convert startTime and endTime to UTC if provided (assume input is local time)
-        if (req.body.startTime) {
-            const [h, m] = req.body.startTime.split(':').map(Number);
-            const d = new Date();
-            d.setHours(h, m, 0, 0);
-            req.body.startTime = d.toISOString().slice(11, 16); // UTC HH:MM
-        }
-        if (req.body.endTime) {
-            const [h, m] = req.body.endTime.split(':').map(Number);
-            const d = new Date();
-            d.setHours(h, m, 0, 0);
-            req.body.endTime = d.toISOString().slice(11, 16); // UTC HH:MM
-        }
+        // PATCH: Do not convert startTime/endTime; save as received (assume 'HH:mm' string from frontend)
         // Convert days to UTC day names if provided
         if (req.body.days && Array.isArray(req.body.days)) {
             req.body.days = req.body.days.map(day => {
@@ -177,7 +173,9 @@ app.post('/courses', authenticateToken, authorizeRole(['lecturer', 'administrato
             });
         }
         const newCourse = await Course.create(req.body);
-        res.status(201).json(newCourse);
+        // Fetch with classroom details
+        const courseWithClassroom = await Course.findByPk(newCourse.id, { include: [{ model: Classroom, as: 'Classroom' }] });
+        res.status(201).json(courseWithClassroom);
     } catch (err) {
         console.error('Failed to create course:', err);
         res.status(500).json({ error: 'Failed to create course' });
@@ -193,7 +191,7 @@ app.put('/courses/:id', authenticateToken, authorizeRole(['lecturer', 'administr
         if (!updated) {
             return res.status(404).json({ error: 'Course not found' });
         }
-        const updatedCourse = await Course.findByPk(courseId);
+        const updatedCourse = await Course.findByPk(courseId, { include: [{ model: Classroom, as: 'Classroom' }] });
         res.json(updatedCourse);
     } catch (err) {
         res.status(500).json({ error: 'Failed to update course' });
@@ -215,9 +213,15 @@ app.delete('/courses/:id', authenticateToken, authorizeRole(['lecturer', 'admini
 });
 // Endpoint: Get all students registered for a course
 app.get('/register-course/registered-students', authenticateToken, authorizeRole(['lecturer', 'administrator']), async (req, res) => {
+    // --- PATCH: Return attendance percentage based on course hours ---
     const courseId = req.query.courseId;
     if (!courseId) return res.status(400).json({ error: 'courseId is required' });
     try {
+        // Get the course to fetch total allocated hours
+        const course = await Course.findByPk(courseId);
+        if (!course) return res.status(404).json({ error: 'Course not found' });
+
+        // Get all registrations for this course
         const registrations = await CourseRegistration.findAll({
             where: { courseId },
             include: [{
@@ -226,9 +230,23 @@ app.get('/register-course/registered-students', authenticateToken, authorizeRole
                 attributes: ['username', 'id', 'role']
             }]
         });
-        // Map to just student info
-        const students = registrations.map(r => r.Student || { userId: r.userId });
-        res.json(students);
+
+        // For each student, calculate attendance as a percentage of course.hours
+        const attendanceData = await Promise.all(registrations.map(async r => {
+            // Sum all attendance durations (in hours) for this student in this course
+            const totalAttended = await Attendance.sum('duration', {
+                where: { courseId, userId: r.userId }
+            });
+            // Calculate percentage (duration/course.hours * 100)
+            const percent = course.hours > 0 ? Math.round(((totalAttended || 0) / course.hours) * 100) : 0;
+            return {
+                id: r.Student.id,
+                username: r.Student.username,
+                attendance: percent // percentage of hours attended
+            };
+        }));
+
+        res.json(attendanceData);
     } catch (err) {
         console.error(err);
         res.status(500).json({ error: 'Failed to fetch students for course.' });
@@ -411,6 +429,7 @@ app.post('/register-course', authenticateToken, authorizeRole(['student']), asyn
 });
 
 // Get all course registrations for the current student
+// PATCH: Get registered courses for a student, with attendance percentage for each course
 app.get('/register-course/registered', authenticateToken, authorizeRole(['student']), async (req, res) => {
     // Support both ?userId=... and authenticated user
     const userId = req.query.userId ? parseInt(req.query.userId) : req.user.id;
@@ -422,11 +441,27 @@ app.get('/register-course/registered', authenticateToken, authorizeRole(['studen
                 as: 'Course',
                 attributes: [
                   'id', 'title', 'code', 'hours', 'totalHours', 'days',
-                  'classroom', 'startTime', 'endTime', 'lecturer'
+                  'classroomId', 'startTime', 'endTime', 'lecturer', 'description', 'credits'
                 ]
             }]
         });
-        res.json(registrations);
+        // For each course, calculate attendance percentage
+        const result = await Promise.all(registrations.map(async r => {
+          let attendancePercent = 0;
+          if (r.Course && r.Course.id && r.Course.hours) {
+            // Sum all attendance durations for this student in this course
+            const totalAttended = await Attendance.sum('duration', {
+              where: { courseId: r.Course.id, userId }
+            });
+            attendancePercent = r.Course.hours > 0 ? Math.round(((totalAttended || 0) / r.Course.hours) * 100) : 0;
+          }
+          return {
+            courseId: r.courseId,
+            Course: r.Course,
+            attendance: attendancePercent // PATCH: percentage of hours attended
+          };
+        }));
+        res.json(result);
     } catch (err) {
         console.error(err);
         res.status(500).json({ error: 'Failed to fetch registered courses.' });
@@ -473,6 +508,8 @@ app.post('/resolve-class', authenticateToken, authorizeRole(['student']), async 
 });
 
 //nfc-route
+
+// NFC attendance endpoint: allow only 2 taps per course per day (check-in and check-out), with at least 25 minutes between them
 app.post('/nfc/attendance', authenticateToken, authorizeRole(['student']), async (req, res) => {
     const { hallName } = req.body;
     const userId = req.user.id;
@@ -513,31 +550,21 @@ app.post('/nfc/attendance', authenticateToken, authorizeRole(['student']), async
             return res.status(404).json({ error: 'No active class in this hall right now.' });
         }
 
-        // Minimum duration enforcement
-        const classEnd = new Date();
-        const [endHour, endMinute] = activeCourse.endTime.split(':').map(Number);
-        classEnd.setHours(endHour, endMinute, 0, 0);
+        // --- ENFORCE: Only 2 taps per course per day, with 25min interval ---
+        // Get today's date string (YYYY-MM-DD)
+        const today = now.toISOString().slice(0, 10);
 
-        const minutesToEnd = Math.floor((classEnd - now) / 60000);
-
-        if (minutesToEnd < 20) {
-            // Calculate how many minutes late
-            const className = activeCourse.name || activeCourse.title || 'this course';
-            const classEndTime = new Date();
-            classEndTime.setHours(endHour, endMinute, 0, 0);
-            const minutesLate = Math.abs(minutesToEnd);
-            return res.status(403).json({ 
-                error: `${minutesLate} minutes late to take attendance for ${className}.` 
-            });
-        }
-
-        // Check for an existing open attendance record
-        const existing = await Attendance.findOne({
-            where: { userId, courseId: activeCourse.id, timeOut: null }
+        // Find today's attendance for this user and course (timeIn on or after midnight today)
+        const attendance = await Attendance.findOne({
+            where: {
+                userId,
+                courseId: activeCourse.id,
+                timeIn: { [sequelize.Op.gte]: new Date(today + 'T00:00:00.000Z') }
+            }
         });
 
-        if (!existing) {
-            // Mark time-in
+        if (!attendance) {
+            // First tap: check-in
             const newRecord = await Attendance.create({
                 userId,
                 courseId: activeCourse.id,
@@ -545,14 +572,23 @@ app.post('/nfc/attendance', authenticateToken, authorizeRole(['student']), async
                 timeOut: null,
                 duration: null
             });
-            return res.status(201).json({ message: 'Time-in recorded', status: 'IN', record: newRecord });
+            return res.status(201).json({ message: 'Check-in recorded', status: 'IN', record: newRecord });
+        } else if (!attendance.timeOut) {
+            // Second tap: check-out
+            const diffMins = Math.round((now - attendance.timeIn) / 60000);
+            if (diffMins < 25) {
+                // Not enough time between check-in and check-out
+                return res.status(400).json({ error: 'You must wait at least 25 minutes before checking out.' });
+            }
+            attendance.timeOut = now;
+            attendance.duration = diffMins;
+            await attendance.save();
+            return res.json({ message: 'Check-out recorded', status: 'OUT', record: attendance });
         } else {
-            // Mark time-out and calculate duration
-            existing.timeOut = now;
-            existing.duration = Math.round((now - existing.timeIn) / 60000);
-            await existing.save();
-            return res.json({ message: 'Time-out recorded', status: 'OUT', record: existing });
+            // Already checked in and out for this course today
+            return res.status(400).json({ error: 'You have already checked in and out for this course today.' });
         }
+        // --- END ENFORCEMENT ---
     } catch (err) {
         console.error('NFC attendance error:', err);
         res.status(500).json({ error: 'An error occurred while recording attendance.' });
@@ -568,6 +604,52 @@ app.get('/test-alive', (req, res) => {
 app.use((req, res, next) => {
     console.log(`[404] Route not found: ${req.method} ${req.originalUrl}`);
     res.status(404).json({ error: 'Route not found' });
+});
+
+// Classroom Management Endpoints (Admin Only)
+// Create a classroom
+app.post('/classrooms', authenticateToken, authorizeRole(['administrator']), async (req, res) => {
+  const { name, nfcId, qrLink } = req.body;
+  if (!name || !nfcId) return res.status(400).json({ error: 'Classroom name and NFC ID are required.' });
+  try {
+    const classroom = await Classroom.create({ name, nfcId, qrLink });
+    res.status(201).json(classroom);
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to create classroom.' });
+  }
+});
+
+// Get all classrooms
+app.get('/classrooms', authenticateToken, authorizeRole(['administrator']), async (req, res) => {
+  try {
+    const classrooms = await Classroom.findAll();
+    res.json(classrooms);
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to fetch classrooms.' });
+  }
+});
+
+// Update classroom
+app.put('/classrooms/:id', authenticateToken, authorizeRole(['administrator']), async (req, res) => {
+  try {
+    const [updated] = await Classroom.update(req.body, { where: { id: req.params.id } });
+    if (!updated) return res.status(404).json({ error: 'Classroom not found.' });
+    const classroom = await Classroom.findByPk(req.params.id);
+    res.json(classroom);
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to update classroom.' });
+  }
+});
+
+// Delete classroom
+app.delete('/classrooms/:id', authenticateToken, authorizeRole(['administrator']), async (req, res) => {
+  try {
+    const deleted = await Classroom.destroy({ where: { id: req.params.id } });
+    if (!deleted) return res.status(404).json({ error: 'Classroom not found.' });
+    res.status(204).send();
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to delete classroom.' });
+  }
 });
 
 app.listen(port, () => {
