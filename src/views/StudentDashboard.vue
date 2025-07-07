@@ -56,8 +56,8 @@ export default {
         { title: 'Courses', route: '/student-courses' },
         { title: 'Take Attendance', route: '/attendance' },
         { title: 'Records', route: '/record'},
-        { title: 'Analytics', route: '/analytics'},
         { title: 'Timetable', route: '/timetable'},
+        { title: 'Analytics', route: '/analytics'},
         { title: 'Notifications', route: '/notifications' },
         
       ],

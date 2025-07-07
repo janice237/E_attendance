@@ -30,6 +30,11 @@
               <td>{{ item.credits }}</td>
               <td>{{ item.hours }}</td>
               <td>{{ item.location }}</td>
+              <!-- PATCH: Show attendance percentage if registered -->
+              <td>
+                <span v-if="item.registered">{{ item.attendance }}</span>
+                <span v-else>-</span>
+              </td>
               <td>
                 <v-btn v-if="!item.registered" color="primary" @click="registerCourse(item)">
                   Register
@@ -67,6 +72,7 @@ export default {
         { text: 'Credits', value: 'credits' },
         { text: 'Hours', value: 'hours' },
         { text: 'Location', value: 'location' },
+        { text: 'Attendance', value: 'attendance', sortable: false }, // PATCH
         { text: 'Actions', value: 'actions', sortable: false },
       ],
     };
@@ -95,7 +101,8 @@ export default {
             const regRes = await axios.get(`http://localhost:3000/register-course/registered?userId=${encodeURIComponent(userId)}`, {
               headers: { Authorization: `Bearer ${token}` }
             });
-            registeredCourseIds = (regRes.data || []).map(r => r.courseId);
+            // Defensive: handle both array of {courseId, Course} and array of courseId
+            registeredCourseIds = (regRes.data || []).map(r => r.courseId || (r.Course && r.Course.id)).filter(Boolean);
           } catch (e) {
             registeredCourseIds = [];
           }

@@ -70,6 +70,16 @@ const routes = [
   path: '/timetable',
   name: 'Timetable',
   component: () => import('../views/Timetable.vue'),
+},
+{
+  path: '/admin-dashboard',
+  name: 'AdminDashboard',
+  component: () => import('../views/AdminDashboard.vue'),
+},
+{
+  path: '/admin/classrooms',
+  name: 'AdminClassrooms',
+  component: () => import('../views/AdminClassrooms.vue'),
 }
 ]
 

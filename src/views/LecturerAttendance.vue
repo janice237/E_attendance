@@ -4,7 +4,7 @@
       <v-btn icon @click="$router.back()">
         <v-icon>mdi-arrow-left</v-icon>
       </v-btn>
-      <v-toolbar-title>Attendance (Lecturer)</v-toolbar-title>
+      <v-toolbar-title> My Course Attendance Records</v-toolbar-title>
       <v-spacer></v-spacer>
       <v-btn color="error" class="ml-2" @click="logout">
         <v-icon left>mdi-logout</v-icon>Logout
@@ -26,9 +26,13 @@
         <h3>Registered Students for {{ selectedCourse.title || selectedCourse.code }}</h3>
         <v-alert v-if="students.length === 0" type="info">No students registered for this course.</v-alert>
         <v-list v-else>
+          <!-- PATCH: Show attendance percentage next to student name -->
           <v-list-item v-for="student in students" :key="student.id || student.userId">
             <v-list-item-content>
-              <v-list-item-title>{{ student.username || student.id || student.userId || 'Unknown' }}</v-list-item-title>
+              <v-list-item-title>
+                {{ student.username || student.id || student.userId || 'Unknown' }}
+                <span v-if="typeof student.attendance === 'number'"> — Attendance: {{ student.attendance }}%</span>
+              </v-list-item-title>
             </v-list-item-content>
           </v-list-item>
         </v-list>

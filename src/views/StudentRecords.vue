@@ -41,6 +41,8 @@
           <div class="d-flex align-center mb-2">
             <span class="mr-2 font-weight-bold">Total Hours Covered:</span>
             <span>{{ totalHoursCovered.toFixed(2) }} / {{ selectedCourse.hours || selectedCourse.totalHours || '-' }} hours</span>
+            <!-- PATCH: Show overall attendance percentage for this course -->
+            <span class="ml-4 font-weight-bold">Attendance: {{ progressPercent.toFixed(1) }}%</span>
           </div>
           <v-progress-linear
             :value="progressPercent"

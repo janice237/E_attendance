@@ -76,6 +76,8 @@ export default {
           const userRole = (data.role || '').toLowerCase();
           if (userRole === 'student') {
             this.$router.push('/student-dashboard');
+          } else if (userRole === 'administrator') {
+            this.$router.push('/admin-dashboard');
           } else {
             this.$router.push('/dashboard');
           }

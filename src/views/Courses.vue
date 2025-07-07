@@ -44,7 +44,14 @@
                 <v-text-field v-model="editCourse.credits" label="Course Credits" type="number" required />
                 <v-text-field v-model="editCourse.hours" label="Course Hours" type="number" required />
                 <v-text-field v-model="editCourse.location" label="Location" required />
-                <v-text-field v-model="editCourse.classroom" label="Classroom" />
+                <v-select
+                  v-model="editCourse.classroomId"
+                  :items="classroomOptions"
+                  item-text="name"
+                  item-value="id"
+                  label="Classroom"
+                  required
+                />
                 <v-combobox v-model="editCourse.days" :items="['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday']" label="Days (optional)" multiple chips clearable />
                 <v-text-field v-model="editCourse.startTime" label="Start Time (optional)" type="time" />
                 <v-text-field v-model="editCourse.endTime" label="End Time (optional)" type="time" />
@@ -104,7 +111,14 @@
                 <v-text-field v-model="newCourse.credits" label="Course Credits" type="number" required />
                 <v-text-field v-model="newCourse.hours" label="Course Hours" type="number" required />
                 <v-text-field v-model="newCourse.location" label="Location" required />
-                <v-text-field v-model="newCourse.classroom" label="Classroom" />
+                <v-select
+                  v-model="newCourse.classroomId"
+                  :items="classroomOptions"
+                  item-text="name"
+                  item-value="id"
+                  label="Classroom"
+                  required
+                />
                 <v-combobox v-model="newCourse.days" :items="['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday']" label="Days (optional)" multiple chips clearable />
                 <v-text-field v-model="newCourse.startTime" label="Start Time (optional)" type="time" />
                 <v-text-field v-model="newCourse.endTime" label="End Time (optional)" type="time" />
@@ -152,7 +166,7 @@ export default {
         credits: '',
         hours: '',
         location: '',
-        classroom: '', // changed from name to classroom
+        classroomId: null, // now using classroomId
         days: [],
         startTime: '',
         endTime: '',
@@ -166,7 +180,7 @@ export default {
         { text: 'Credits', value: 'credits' },
         { text: 'Hours', value: 'hours' },
         { text: 'Location', value: 'location' },
-        { text: 'Classroom', value: 'classroom' }, // changed from Name to Classroom
+        { text: 'Classroom', value: 'classroomName' },
         { text: 'Days', value: 'days' },
         { text: 'Start Time', value: 'startTime' },
         { text: 'End Time', value: 'endTime' },
@@ -285,7 +299,7 @@ export default {
           credits: this.newCourse.credits ? Number(this.newCourse.credits) : null,
           hours: this.newCourse.hours ? Number(this.newCourse.hours) : null,
           location: this.newCourse.location,
-          classroom: this.newCourse.classroom || null,
+          classroomId: this.newCourse.classroomId,
           days: this.newCourse.days && this.newCourse.days.length ? this.newCourse.days : null,
           startTime: this.newCourse.startTime || null,
           endTime: this.newCourse.endTime || null,
@@ -303,7 +317,7 @@ export default {
         this.courses.push(response.data);
         this.showDialog = false;
         this.newCourse = {
-          code: '', title: '', lecturer: '', description: '', credits: '', hours: '', location: '', classroom: '', days: [], startTime: '', endTime: '', totalHours: ''
+          code: '', title: '', lecturer: '', description: '', credits: '', hours: '', location: '', classroomId: null, days: [], startTime: '', endTime: '', totalHours: ''
         };
         this.filterCourses();
       } catch (error) {
@@ -318,10 +332,24 @@ export default {
         if (!Array.isArray(response.data)) {
           throw new Error('Invalid response from server.');
         }
-        this.courses = response.data;
+        // Map classroom name for display
+        this.courses = response.data.map(course => ({
+          ...course,
+          classroomName: course.Classroom ? course.Classroom.name : ''
+        }));
         this.filteredCourses = this.courses;
       } catch (error) {
         alert(error.response?.data?.error || error.message || 'Failed to fetch courses');
+      }
+    },
+    async fetchClassroomsList() {
+      // Fetch all classrooms for dropdowns
+      try {
+        const res = await fetch('http://localhost:3000/classrooms', { headers: { Authorization: `Bearer ${localStorage.token}` } });
+        if (!res.ok) throw new Error('Failed to fetch classrooms');
+        this.classroomOptions = await res.json();
+      } catch (e) {
+        this.classroomOptions = [];
       }
     },
     // Write hall name to NFC tag using Web NFC API
@@ -345,7 +373,8 @@ export default {
     },
   },
   mounted() {
-    this.fetchCourses(); // Fetch courses when the component is mounted
+    this.fetchCourses();
+    this.fetchClassroomsList();
   },
 };
 </script>

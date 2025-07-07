@@ -58,7 +58,6 @@ export default {
         { title: 'Course Management', route: '/course-management' },
         { title: 'Attendance', route: '/lecturer-attendance'},
         { title: 'Analytics', route: '/analytics' },
-        { title: 'Timetable', route: '/timetable' },
         { title: 'Notifications', route: '/notifications' },
       ],
       boxes: [

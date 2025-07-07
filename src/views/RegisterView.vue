@@ -105,8 +105,12 @@ export default {
           const userRole = (data.role || this.form.role || '').toLowerCase();
           if (userRole === 'student') {
             this.$router.push('/student-dashboard');
-          } else {
+          } else if (userRole === 'admin' || userRole === 'administrator') {
+            this.$router.push('/admin-dashboard');
+          } else if (userRole === 'lecturer') {
             this.$router.push('/dashboard');
+          } else {
+            this.$router.push('/'); // fallback
           }
         } else {
           alert(data.error || data.message || 'Registration failed.');

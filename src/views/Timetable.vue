@@ -91,7 +91,7 @@ export default {
           const registered = await res.json();
           console.log('Registered Courses:', registered);
           if (Array.isArray(registered) && registered.length && registered[0].Course) {
-            // Map each registration to a flat object for the table
+            // PATCH: Use only the classroom field from the Course object (do not use joined Classroom object)
             this.courses = registered.map(r => {
               const c = r.Course || {};
               return {
@@ -100,7 +100,7 @@ export default {
                 days: Array.isArray(c.days) ? c.days.join(', ') : (c.days || '-'),
                 startTime: c.startTime ?? c.start_time ?? null,
                 endTime: c.endTime ?? c.end_time ?? null,
-                classroom: c.classroom ?? '-',
+                classroom: c.classroom || '-',
                 lecturer: c.lecturer ?? '-',
               };
             });
