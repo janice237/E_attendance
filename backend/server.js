@@ -12,7 +12,8 @@ const port = process.env.PORT || 3000;
 
 const allowedOrigins = [
     'http://localhost:8080',
-    'https://e-taptrack.vercel.app/'
+    'https://e-taptrack.vercel.app/',
+    'https://e-taptrack-git-main1-janices-projects-18a7b732.vercel.app'
 ]; // Revert to only allow localhost frontend
 
 app.use(cors({
