@@ -54,7 +54,6 @@ app.post('/register', async (req, res) => {
     if (role === 'admin') normalizedRole = 'administrator';
     if (!['student', 'lecturer', 'administrator'].includes(normalizedRole)) {
         return res.status(400).json({ error: 'Invalid role' });
-    }
     try {
         // Check if user already exists
         const existingUser = await User.findOne({ where: { username } });
@@ -68,7 +67,8 @@ app.post('/register', async (req, res) => {
         res.status(201).json({ message: 'User registered successfully' });
     } catch (err) {
         console.error('Registration error:', err); // Log the actual error for debugging
-        res.status(500).json({ error: 'Failed to register user' });
+        res.status(500).json({ error: err.message || 'Failed to register user', details: err });
+    }
     }
 });
 
