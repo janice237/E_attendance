@@ -79,10 +79,10 @@ export default {
         return;
       }
       const apiUrl = process.env.VUE_APP_API_URL || "https://nfc-attendance-tq1q.onrender.com";
-      console.log('API URL:', `${apiUrl}/register`);
+      console.log('API URL:', `${apiUrl}register`);
 
       try {
-        const response = await fetch(`${apiUrl}/register`, {
+        const response = await fetch(`${apiUrl}register`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
