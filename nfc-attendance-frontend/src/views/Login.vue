@@ -48,7 +48,7 @@ export default {
   methods: {
     async onLogin() {
       console.log('onLogin called');
-      const apiUrl = import.meta.env.VITE_API_URL;
+      const apiUrl = import.meta.env.VUE_APP_API_URL;
       try {
         const response = await fetch(`${apiUrl}/login`, {
           method: 'POST',
