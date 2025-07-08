@@ -84,7 +84,8 @@ export default {
         return;
       }
       try {
-        const res = await fetch(`http://localhost:3000/register-course/registered?userId=${encodeURIComponent(userId)}`, {
+        const apiUrl = import.meta.env.VITE_API_URL;
+        const res = await fetch(`${apiUrl}/register-course/registered?userId=${encodeURIComponent(userId)}`, {
           headers: { Authorization: `Bearer ${token}` },
         });
         if (res.ok) {

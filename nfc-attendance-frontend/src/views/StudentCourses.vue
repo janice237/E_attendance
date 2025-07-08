@@ -87,7 +87,8 @@ export default {
       console.log('fetchCourses called');
       try {
         // Get all available courses from the backend
-        const response = await axios.get('http://localhost:3000/public-courses');
+        const apiUrl = import.meta.env.VITE_API_URL;
+        const response = await axios.get(`${apiUrl}/public-courses`);
         if (!Array.isArray(response.data)) {
           throw new Error('Invalid response from server.');
         }
@@ -98,7 +99,7 @@ export default {
         if (token && userId) {
           try {
             // Get all course registrations for this student
-            const regRes = await axios.get(`http://localhost:3000/register-course/registered?userId=${encodeURIComponent(userId)}`, {
+            const regRes = await axios.get(`${apiUrl}/register-course/registered?userId=${encodeURIComponent(userId)}`, {
               headers: { Authorization: `Bearer ${token}` }
             });
             // Defensive: handle both array of {courseId, Course} and array of courseId
@@ -126,7 +127,8 @@ export default {
       }
       try {
         // Register the student for the course
-        await axios.post('http://localhost:3000/register-course', { courseId: course.id }, {
+        const apiUrl = import.meta.env.VITE_API_URL;
+        await axios.post(`${apiUrl}/register-course`, { courseId: course.id }, {
           headers: { Authorization: `Bearer ${token}` }
         });
         course.registered = true;
@@ -147,7 +149,8 @@ export default {
       }
       try {
         // Unregister the student from the course
-        await axios.delete('http://localhost:3000/register-course', {
+        const apiUrl = import.meta.env.VITE_API_URL;
+        await axios.delete(`${apiUrl}/register-course`, {
           headers: { Authorization: `Bearer ${token}` },
           data: { courseId: course.id }
         });

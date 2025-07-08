@@ -222,7 +222,8 @@ export default {
             delete payload[key];
           }
         });
-        const response = await axios.put(`http://localhost:3000/courses/${this.editCourse.id}`, payload, {
+        const apiUrl = import.meta.env.VITE_API_URL;
+        const response = await axios.put(`${apiUrl}/courses/${this.editCourse.id}`, payload, {
           headers: { Authorization: `Bearer ${token}` }
         });
         // Update local list
@@ -245,7 +246,8 @@ export default {
         return;
       }
       try {
-        await axios.delete(`http://localhost:3000/courses/${this.deleteCourse.id}`, {
+        const apiUrl = import.meta.env.VITE_API_URL;
+        await axios.delete(`${apiUrl}/courses/${this.deleteCourse.id}`, {
           headers: { Authorization: `Bearer ${token}` }
         });
         this.courses = this.courses.filter(c => c.id !== this.deleteCourse.id);
@@ -272,7 +274,8 @@ export default {
           alert('Date, start time, and end time are required.');
           return;
         }
-        await axios.post(`http://localhost:3000/courses/${this.catchupCourse.id}/catchup`, payload, {
+        const apiUrl = import.meta.env.VITE_API_URL;
+        await axios.post(`${apiUrl}/courses/${this.catchupCourse.id}/catchup`, payload, {
           headers: { Authorization: `Bearer ${token}` }
         });
         this.showCatchupDialog = false;
@@ -311,7 +314,8 @@ export default {
             delete payload[key];
           }
         });
-        const response = await axios.post('http://localhost:3000/courses', payload, {
+        const apiUrl = import.meta.env.VITE_API_URL;
+        const response = await axios.post(`${apiUrl}/courses`, payload, {
           headers: { Authorization: `Bearer ${token}` }
         });
         this.courses.push(response.data);
@@ -328,7 +332,8 @@ export default {
       console.log('fetchCourses called');
       try {
         // Always use the public endpoint so all users (including students and unauthenticated) can see courses
-        const response = await axios.get('http://localhost:3000/public-courses');
+        const apiUrl = import.meta.env.VITE_API_URL;
+        const response = await axios.get(`${apiUrl}/public-courses`);
         if (!Array.isArray(response.data)) {
           throw new Error('Invalid response from server.');
         }
@@ -345,7 +350,8 @@ export default {
     async fetchClassroomsList() {
       // Fetch all classrooms for dropdowns
       try {
-        const res = await fetch('http://localhost:3000/classrooms', { headers: { Authorization: `Bearer ${localStorage.token}` } });
+        const apiUrl = import.meta.env.VITE_API_URL;
+        const res = await fetch(`${apiUrl}/classrooms`, { headers: { Authorization: `Bearer ${localStorage.token}` } });
         if (!res.ok) throw new Error('Failed to fetch classrooms');
         this.classroomOptions = await res.json();
       } catch (e) {

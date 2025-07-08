@@ -67,7 +67,8 @@ export default {
           console.error('[LecturerAttendance] No token in store.');
           return;
         }
-        const response = await axios.get('http://localhost:3000/courses', {
+        const apiUrl = import.meta.env.VITE_API_URL;
+        const response = await axios.get(`${apiUrl}/courses`, {
           headers: { Authorization: `Bearer ${token}` }
         });
         console.log('[LecturerAttendance] /courses API response:', response.data);
@@ -88,7 +89,8 @@ export default {
       const token = this.$store.state.user.token;
       if (!token || !course.id) return;
       try {
-        const res = await axios.get(`http://localhost:3000/register-course/registered-students?courseId=${encodeURIComponent(course.id)}`, {
+        const apiUrl = import.meta.env.VITE_API_URL;
+        const res = await axios.get(`${apiUrl}/register-course/registered-students?courseId=${encodeURIComponent(course.id)}`, {
           headers: { Authorization: `Bearer ${token}` }
         });
         if (Array.isArray(res.data)) {

@@ -78,7 +78,7 @@ export default {
         alert('Please select a role.');
         return;
       }
-      const apiUrl = 'http://localhost:3000';
+      const apiUrl = import.meta.env.VITE_API_URL;
       try {
         const response = await fetch(`${apiUrl}/register`, {
           method: 'POST',

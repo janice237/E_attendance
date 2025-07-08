@@ -48,7 +48,7 @@ export default {
   methods: {
     async onLogin() {
       console.log('onLogin called');
-      const apiUrl = 'http://localhost:3000';
+      const apiUrl = import.meta.env.VITE_API_URL;
       try {
         const response = await fetch(`${apiUrl}/login`, {
           method: 'POST',
