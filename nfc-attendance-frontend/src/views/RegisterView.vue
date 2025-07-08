@@ -78,8 +78,9 @@ export default {
         alert('Please select a role.');
         return;
       }
-      // const apiUrl = import.meta.env.VITE_API_URL;
-      const apiUrl = process.env.VUE_APP_API_URL;
+      const apiUrl = process.env.VUE_APP_API_URL || "https://nfc-attendance-tq1q.onrender.com";
+      console.log('API URL:', `${apiUrl}/register`);
+
       try {
         const response = await fetch(`${apiUrl}/register`, {
           method: 'POST',
