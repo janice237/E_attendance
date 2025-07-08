@@ -84,7 +84,7 @@ export default {
         return;
       }
       try {
-        const apiUrl = import.meta.env.VUE_APP_API_URL;
+        const apiUrl = import.meta.env.VITE_API_URL;
         const res = await fetch(`${apiUrl}/register-course/registered?userId=${encodeURIComponent(userId)}`, {
           headers: { Authorization: `Bearer ${token}` },
         });
