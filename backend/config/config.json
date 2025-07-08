@@ -1,0 +1,9 @@
+{
+  "development": {
+    "username": "Janice",
+    "password": "0987654321",
+    "database": "nfc_attendance",
+    "host": "127.0.0.1",
+    "dialect": "postgres"
+  }
+}
