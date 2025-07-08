@@ -10,7 +10,10 @@ const port = process.env.PORT || 3000;
 
 // Middleware definitions
 
-const allowedOrigins = ['http://localhost:8080']; // Revert to only allow localhost frontend
+const allowedOrigins = [
+    'http://localhost:8080',
+    'https://e-taptrack.vercel.app/'
+]; // Revert to only allow localhost frontend
 
 app.use(cors({
   origin: allowedOrigins,
@@ -22,8 +25,6 @@ app.use(cors({
 
 console.log('=== NFC Attendance Backend STARTED ===');
 
-// Enable CORS for all routes
- app.use(cors()); // Removed duplicate CORS middleware to prevent override
 // Use body-parser for urlencoded data (optional, for form submissions)
 app.use(bodyParser.urlencoded({ extended: true }));
 // Middleware to parse JSON
