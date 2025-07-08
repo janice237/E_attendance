@@ -87,7 +87,7 @@ export default {
       console.log('fetchCourses called');
       try {
         // Get all available courses from the backend
-        const apiUrl = import.meta.env.VITE_API_URL;
+        const apiUrl=import.meta.env.VITE_API_URL;
         const response = await axios.get(`${apiUrl}/public-courses`);
         if (!Array.isArray(response.data)) {
           throw new Error('Invalid response from server.');
@@ -127,7 +127,7 @@ export default {
       }
       try {
         // Register the student for the course
-        const apiUrl = import.meta.env.VITE_API_URL;
+        const apiUrl=import.meta.env.VITE_API_URL;
         await axios.post(`${apiUrl}/register-course`, { courseId: course.id }, {
           headers: { Authorization: `Bearer ${token}` }
         });
@@ -149,7 +149,7 @@ export default {
       }
       try {
         // Unregister the student from the course
-        const apiUrl = import.meta.env.VITE_API_URL;
+        const apiUrl=import.meta.env.VITE_API_URL;
         await axios.delete(`${apiUrl}/register-course`, {
           headers: { Authorization: `Bearer ${token}` },
           data: { courseId: course.id }
