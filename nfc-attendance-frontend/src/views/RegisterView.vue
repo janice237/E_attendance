@@ -78,7 +78,6 @@ export default {
         alert('Please select a role.');
         return;
       }
-      console.log('import.meta.env:', import.meta.env);
       const apiUrl = process.env.VUE_APP_API_URL;
       console.log('API URL:', `${apiUrl}/register`);
 

@@ -11,11 +11,13 @@ const port = process.env.PORT || 3000;
 
 // Middleware definitions
 
-const allowedOrigins = [
-    'http://localhost:8080',
-    'https://e-taptrack.vercel.app',
-    'https://e-taptrack-rm1mflj79-janices-projects-18a7b732.vercel.app'
-];
+const allowedOrigins = process.env.CORS_ORIGINS 
+    ? process.env.CORS_ORIGINS.split(',') 
+    : [
+        'http://localhost:8080',
+        'https://e-taptrack.vercel.app',
+        'https://e-taptrack-rm1mflj79-janices-projects-18a7b732.vercel.app'
+    ];
 app.use(cors({
   origin: allowedOrigins,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
@@ -55,6 +57,8 @@ app.post('/register', async (req, res) => {
     if (role === 'admin') normalizedRole = 'administrator';
     if (!['student', 'lecturer', 'administrator'].includes(normalizedRole)) {
         return res.status(400).json({ error: 'Invalid role' });
+    }
+    
     try {
         // Check if user already exists
         const existingUser = await User.findOne({ where: { username } });
@@ -69,7 +73,6 @@ app.post('/register', async (req, res) => {
     } catch (err) {
         console.error('Registration error:', err); // Log the actual error for debugging
         res.status(500).json({ error: err.message || 'Failed to register user', details: err });
-    }
     }
 });
 
