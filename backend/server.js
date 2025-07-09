@@ -573,8 +573,12 @@ app.post('/nfc/attendance', authenticateToken, authorizeRole(['student']), async
             // Second tap: check-out
             const diffMins = Math.round((now - attendance.timeIn) / 60000);
             if (diffMins < 25) {
-                // Not enough time between check-in and check-out
-                return res.status(400).json({ error: 'You must wait at least 25 minutes before checking out.' });
+                // Not enough time between check-in and check-out, just return current status
+                return res.status(200).json({ 
+                    message: `You are still checked in. Wait ${25 - diffMins} more minute(s) before checking out.`,
+                    status: 'IN',
+                    record: attendance
+                });
             }
             attendance.timeOut = now;
             attendance.duration = diffMins;
