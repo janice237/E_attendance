@@ -4,6 +4,7 @@ const cors = require('cors');
 const bodyParser = require('body-parser');
 const bcrypt = require('bcrypt');
 const { sequelize, User, Attendance, Course, CatchupClass, Notification, CourseRegistration, Classroom } = require('./models');
+const { Op } = require('sequelize');
 const jwt = require('jsonwebtoken');
 require('dotenv').config();
 const port = process.env.PORT || 3000;
@@ -554,7 +555,7 @@ app.post('/nfc/attendance', authenticateToken, authorizeRole(['student']), async
             where: {
                 userId,
                 courseId: activeCourse.id,
-                timeIn: { [sequelize.Op.gte]: new Date(today + 'T00:00:00.000Z') }
+                timeIn: { [Op.gte]: new Date(today + 'T00:00:00.000Z') }
             }
         });
 
