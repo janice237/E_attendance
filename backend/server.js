@@ -474,11 +474,11 @@ app.post('/resolve-class', authenticateToken, authorizeRole(['student']), async 
         return res.status(400).json({ error: 'Hall name is required.' });
     }
     try {
-        // Always use UTC for time comparison
-        const now = new Date(); // UTC
-        const dayOfWeek = now.toLocaleString('en-US', { weekday: 'long', timeZone: 'UTC' });
-        const currentTime = now.toISOString().slice(11, 16); // 'HH:MM' in UTC
-        console.log(`[DEBUG] UTC dayOfWeek: ${dayOfWeek}, currentTime: ${currentTime}`);
+        // Use server local time for comparison
+        const now = new Date();
+        const dayOfWeek = now.toLocaleString('en-US', { weekday: 'long' });
+        const currentTime = now.toTimeString().slice(0, 5); // 'HH:MM' in local time
+        console.log(`[DEBUG] Local dayOfWeek: ${dayOfWeek}, currentTime: ${currentTime}`);
         // Find a course with matching classroom, day, and time
         const courses = await Course.findAll({ where: { classroom: hallName } });
         console.log(`[DEBUG] Found ${courses.length} courses for classroom ${hallName}`);
