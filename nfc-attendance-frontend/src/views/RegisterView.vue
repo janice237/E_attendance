@@ -94,7 +94,9 @@ export default {
             email: this.form.email,
           }),
         });
+        console.log('Response status:', response.status);
         const data = await response.json();
+        console.log('Response data:', data);
         if (response.ok) {
           // Save user info to Vuex (except password)
           this.$store.dispatch('login', {
@@ -118,6 +120,7 @@ export default {
           alert(data.error || data.message || 'Registration failed.');
         }
       } catch (error) {
+        console.error('Fetch error:', error);
         alert('Error connecting to server.');
       }
     },
