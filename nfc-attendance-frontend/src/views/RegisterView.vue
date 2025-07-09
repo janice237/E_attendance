@@ -78,8 +78,9 @@ export default {
         alert('Please select a role.');
         return;
       }
-      const apiUrl=process.env.VUE_APP_API_URL;
-      console.log('API URL:', `${apiUrl}/register`); 
+      console.log('import.meta.env:', import.meta.env);
+      const apiUrl = process.env.VUE_APP_API_URL;
+      console.log('API URL:', `${apiUrl}/register`);
 
       try {
         const response = await fetch(`${apiUrl}/register`, {
@@ -98,12 +99,13 @@ export default {
         const data = await response.json();
         console.log('Response data:', data);
         if (response.ok) {
+
           // Save user info to Vuex (except password)
           this.$store.dispatch('login', {
             username: this.form.name,
             role: data.role || this.form.role,
-            token: data.token || '',
-          });
+            token: data.token || ''
+          })
 
           // Redirect to the correct dashboard based on role
           const userRole = (data.role || this.form.role || '').toLowerCase();

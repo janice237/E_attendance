@@ -107,13 +107,10 @@ const Course = sequelize.define('Course', {
     type: DataTypes.INTEGER,
     allowNull: false
   },
-  // Relationship: each course belongs to a classroom
-  classroomId: {
-    type: DataTypes.INTEGER,
-    allowNull: false,
-    references: { model: 'Classrooms', key: 'id' },
-    onUpdate: 'CASCADE',
-    onDelete: 'SET NULL'
+  // Use classroom as a string (hall name)
+  classroom: {
+    type: DataTypes.STRING,
+    allowNull: false
   },
   days: {
     type: DataTypes.ARRAY(DataTypes.STRING),
@@ -198,9 +195,7 @@ const CourseRegistration = sequelize.define('CourseRegistration', {
 CourseRegistration.belongsTo(Course, { foreignKey: 'courseId', as: 'Course' });
 Course.hasMany(CourseRegistration, { foreignKey: 'courseId', as: 'Registrations' });
 CourseRegistration.belongsTo(User, { foreignKey: 'userId', as: 'Student' });
-// Classroom <-> Course relationship
-Classroom.hasMany(Course, { foreignKey: 'classroomId', as: 'Courses', onUpdate: 'CASCADE', onDelete: 'SET NULL' });
-Course.belongsTo(Classroom, { foreignKey: 'classroomId', as: 'Classroom', onUpdate: 'CASCADE', onDelete: 'SET NULL' });
+
 
 // Sync models with database (alter: true will update tables without dropping them)
 sequelize.sync({ alter: true })

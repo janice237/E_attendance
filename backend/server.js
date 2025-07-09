@@ -124,9 +124,7 @@ app.get('/protected', authenticateToken, (req, res) => {
 // GET all courses from the database (public, no auth required)
 app.get('/public-courses', async (req, res) => {
     try {
-        const courses = await Course.findAll({
-          include: [{ model: Classroom, as: 'Classroom' }]
-        });
+        const courses = await Course.findAll();
         res.json(courses);
     } catch (err) {
         console.error('Error fetching courses:', err);
@@ -137,10 +135,8 @@ app.get('/public-courses', async (req, res) => {
 // GET all courses from the database
 app.get('/courses', authenticateToken, async (req, res) => {
     try {
-        // Fetch all courses with classroom details
-        const courses = await Course.findAll({
-          include: [{ model: Classroom, as: 'Classroom' }]
-        });
+        // Fetch all courses (no classroom details)
+        const courses = await Course.findAll();
         res.json(courses);
     } catch (err) {
         res.status(500).json({ error: 'Failed to fetch courses' });
@@ -149,8 +145,8 @@ app.get('/courses', authenticateToken, async (req, res) => {
 
 // POST a new course to the database (Lecturer/Admin only)
 app.post('/courses', authenticateToken, authorizeRole(['lecturer', 'administrator']), async (req, res) => {
-    // Validate input: require code, title, lecturer, credits, hours, location, classroomId
-    const requiredFields = ['code', 'title', 'lecturer', 'credits', 'hours', 'location', 'classroomId'];
+    // Validate input: require code, title, lecturer, credits, hours, location, classroom (string)
+    const requiredFields = ['code', 'title', 'lecturer', 'credits', 'hours', 'location', 'classroom'];
     for (const field of requiredFields) {
         if (req.body[field] === undefined || req.body[field] === null || (typeof req.body[field] === 'string' && req.body[field].trim() === '')) {
             return res.status(400).json({ error: `Course ${field} is required.` });
@@ -174,9 +170,7 @@ app.post('/courses', authenticateToken, authorizeRole(['lecturer', 'administrato
             });
         }
         const newCourse = await Course.create(req.body);
-        // Fetch with classroom details
-        const courseWithClassroom = await Course.findByPk(newCourse.id, { include: [{ model: Classroom, as: 'Classroom' }] });
-        res.status(201).json(courseWithClassroom);
+        res.status(201).json(newCourse);
     } catch (err) {
         console.error('Failed to create course:', err);
         res.status(500).json({ error: 'Failed to create course' });
@@ -192,7 +186,7 @@ app.put('/courses/:id', authenticateToken, authorizeRole(['lecturer', 'administr
         if (!updated) {
             return res.status(404).json({ error: 'Course not found' });
         }
-        const updatedCourse = await Course.findByPk(courseId, { include: [{ model: Classroom, as: 'Classroom' }] });
+        const updatedCourse = await Course.findByPk(courseId);
         res.json(updatedCourse);
     } catch (err) {
         res.status(500).json({ error: 'Failed to update course' });
@@ -442,7 +436,7 @@ app.get('/register-course/registered', authenticateToken, authorizeRole(['studen
                 as: 'Course',
                 attributes: [
                   'id', 'title', 'code', 'hours', 'totalHours', 'days',
-                  'classroomId', 'startTime', 'endTime', 'lecturer', 'description', 'credits'
+                  'classroom', 'startTime', 'endTime', 'lecturer', 'description', 'credits'
                 ]
             }]
         });
