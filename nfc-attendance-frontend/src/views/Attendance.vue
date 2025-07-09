@@ -58,7 +58,7 @@ export default {
   methods: {
     // Use Web NFC API for real NFC tap and toggle check-in/out
     async handleCheckInOut() {
-      const apiUrl=import.meta.env.VITE_API_URL;
+      const apiUrl= process.env.VUE_APP_API_URL;
       // --- SIMULATION BLOCK START ---
       /*
       // The following block simulates an NFC scan for desktop testing
@@ -173,7 +173,7 @@ export default {
     },
     // Simulates an NFC tap for testing (calls backend to mark attendance)
     async simulateNfcTap() {
-      const apiUrl=import.meta.env.VITE_API_URL;
+      const apiUrl= process.env.VUE_APP_API_URL;
       const token = this.$store.state.user.token;
       if (!token) {
         this.snackbarText = 'You must be logged in as a student to simulate NFC attendance.';
@@ -213,7 +213,7 @@ export default {
         this.snackbar = true;
         return;
       }
-      const apiUrl=import.meta.env.VITE_API_URL;
+      const apiUrl= process.env.VUE_APP_API_URL;
       try {
         const ndef = new window.NDEFReader();
         await ndef.scan();

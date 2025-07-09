@@ -93,7 +93,7 @@ export default {
       // Use /register-course/registered?userId=... to get only courses the student is registered in
       let courses = [];
       try {
-        const apiUrl=import.meta.env.VITE_API_URL;
+        const apiUrl= process.env.VUE_APP_API_URL;
         const res = await fetch(`${apiUrl}/register-course/registered?userId=${encodeURIComponent(userId)}`, {
           headers: { Authorization: `Bearer ${token}` },
         });
@@ -128,7 +128,7 @@ export default {
       }
       // Fetch attendance for this course (Attendance table data)
       try {
-        const apiUrl=import.meta.env.VITE_API_URL;
+        const apiUrl= process.env.VUE_APP_API_URL;
         const res = await fetch(`${apiUrl}/attendance/${userId}/${course.courseId}`, {
           headers: { Authorization: `Bearer ${token}` },
         });

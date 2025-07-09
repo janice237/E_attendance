@@ -222,7 +222,7 @@ export default {
             delete payload[key];
           }
         });
-        const apiUrl=import.meta.env.VITE_API_URL;
+        const apiUrl= process.env.VUE_APP_API_URL;
         const response = await axios.put(`${apiUrl}/courses/${this.editCourse.id}`, payload, {
           headers: { Authorization: `Bearer ${token}` }
         });
@@ -246,7 +246,7 @@ export default {
         return;
       }
       try {
-        const apiUrl=import.meta.env.VITE_API_URL;
+        const apiUrl= process.env.VUE_APP_API_URL;
         await axios.delete(`${apiUrl}/courses/${this.deleteCourse.id}`, {
           headers: { Authorization: `Bearer ${token}` }
         });
@@ -274,7 +274,7 @@ export default {
           alert('Date, start time, and end time are required.');
           return;
         }
-        const apiUrl=import.meta.env.VITE_API_URL;
+        const apiUrl= process.env.VUE_APP_API_URL;
         await axios.post(`${apiUrl}/courses/${this.catchupCourse.id}/catchup`, payload, {
           headers: { Authorization: `Bearer ${token}` }
         });
@@ -314,7 +314,7 @@ export default {
             delete payload[key];
           }
         });
-        const apiUrl=import.meta.env.VITE_API_URL;
+        const apiUrl=process.env.VUE_APP_API_URL;
         const response = await axios.post(`${apiUrl}/courses`, payload, {
           headers: { Authorization: `Bearer ${token}` }
         });
@@ -332,7 +332,7 @@ export default {
       console.log('fetchCourses called');
       try {
         // Always use the public endpoint so all users (including students and unauthenticated) can see courses
-        const apiUrl=import.meta.env.VITE_API_URL;
+        const apiUrl= process.env.VUE_APP_API_URL;
         const response = await axios.get(`${apiUrl}/public-courses`);
         if (!Array.isArray(response.data)) {
           throw new Error('Invalid response from server.');
@@ -350,7 +350,7 @@ export default {
     async fetchClassroomsList() {
       // Fetch all classrooms for dropdowns
       try {
-        const apiUrl=import.meta.env.VITE_API_URL;
+        const apiUrl=process.env.VUE_APP_API_URL;
         const res = await fetch(`${apiUrl}/classrooms`, { headers: { Authorization: `Bearer ${localStorage.token}` } });
         if (!res.ok) throw new Error('Failed to fetch classrooms');
         this.classroomOptions = await res.json();

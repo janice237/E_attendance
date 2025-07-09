@@ -78,8 +78,8 @@ export default {
         alert('Please select a role.');
         return;
       }
-      const apiUrl=import.meta.env.VITE_API_URL;
-      console.log('API URL:', `${apiUrl}/register`);
+      const apiUrl=process.env.VUE_APP_API_URL;
+      console.log('API URL:', `${apiUrl}/register`); 
 
       try {
         const response = await fetch(`${apiUrl}/register`, {
