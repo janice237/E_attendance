@@ -2,11 +2,28 @@
 
 const { Sequelize, DataTypes } = require('sequelize');
 
-// Initialize Sequelize
-const sequelize = new Sequelize('nfc_attendance', 'Janice', '0987654321', {
-    host: 'localhost',
-    dialect: 'postgres'
-});
+// Initialize Sequelize with environment-based configuration
+let sequelize;
+
+if (process.env.NODE_ENV === 'production' && process.env.DATABASE_URL) {
+    // Production: Use DATABASE_URL from Render
+    sequelize = new Sequelize(process.env.DATABASE_URL, {
+        dialect: 'postgres',
+        dialectOptions: {
+            ssl: {
+                require: true,
+                rejectUnauthorized: false
+            }
+        },
+        logging: false // Disable SQL logging in production
+    });
+} else {
+    // Development: Use local configuration
+    sequelize = new Sequelize('nfc_attendance', 'byron', 'byron123', {
+        host: 'localhost',
+        dialect: 'postgres'
+    });
+}
 
 // Test the connection
 sequelize.authenticate()
