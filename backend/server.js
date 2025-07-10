@@ -88,22 +88,55 @@ app.post('/login', async (req, res) => {
         if (!user || !(await bcrypt.compare(password, user.password))) {
             return res.status(401).json({ error: 'Invalid credentials' });
         }
+        
         // Generate a JWT token with id, username, and role
-        const token = jwt.sign({ id: user.id, username: user.username, role: user.role }, process.env.JWT_SECRET, { expiresIn: '1h' });
-        res.json({ token, role: user.role, id: user.id }); // Return id as well
+        const jwtSecret = process.env.JWT_SECRET || 'your-fallback-secret-key';
+        const token = jwt.sign(
+            { 
+                id: user.id, 
+                username: user.username, 
+                role: user.role 
+            }, 
+            jwtSecret, 
+            { expiresIn: '24h' } // Extended to 24 hours for better UX
+        );
+        
+        console.log('Login successful for user:', user.username, 'Role:', user.role); // Debug log
+        res.json({ 
+            token, 
+            role: user.role, 
+            id: user.id,
+            username: user.username 
+        });
     } catch (err) {
+        console.error('Login error:', err);
         res.status(500).json({ error: 'Failed to login' });
     }
 });
 
 // Middleware to protect routes
 const authenticateToken = (req, res, next) => {
-    const token = req.headers['authorization'] && req.headers['authorization'].split(' ')[1]; // Get token from Authorization header
-    if (!token) return res.sendStatus(401); // Respond with 401 if no token
+    const authHeader = req.headers['authorization'];
+    const token = authHeader && authHeader.split(' ')[1]; // Get token from Authorization header
+    
+    console.log('Auth header:', authHeader); // Debug log
+    console.log('Token:', token); // Debug log
+    
+    if (!token) {
+        console.log('No token provided');
+        return res.status(401).json({ error: 'Access token required' });
+    }
 
     // Verify the token
-    jwt.verify(token, process.env.JWT_SECRET, (err, user) => {
-        if (err) return res.sendStatus(403); // Respond with 403 if token is invalid
+    const jwtSecret = process.env.JWT_SECRET || 'your-fallback-secret-key';
+    console.log('JWT Secret available:', !!jwtSecret); // Debug log
+    
+    jwt.verify(token, jwtSecret, (err, user) => {
+        if (err) {
+            console.log('Token verification failed:', err.message);
+            return res.status(403).json({ error: 'Invalid or expired token' });
+        }
+        console.log('Token verified for user:', user); // Debug log
         req.user = user; // Attach user info to request
         next(); // Proceed to the next middleware or route handler
     });
@@ -112,10 +145,24 @@ const authenticateToken = (req, res, next) => {
 // Middleware to authorize roles
 const authorizeRole = (roles) => {
     return (req, res, next) => {
-        const userRole = req.user.role; // Get user's role from token
-        if (!roles.includes(userRole)) {
-            return res.status(403).json({ error: 'Forbidden' }); // User does not have permission
+        const userRole = req.user?.role; // Get user's role from token
+        console.log('User role:', userRole); // Debug log
+        console.log('Required roles:', roles); // Debug log
+        
+        if (!userRole) {
+            console.log('No user role found in token');
+            return res.status(403).json({ error: 'User role not found' });
         }
+        
+        if (!roles.includes(userRole)) {
+            console.log('User does not have required role');
+            return res.status(403).json({ 
+                error: 'Forbidden - insufficient permissions',
+                userRole: userRole,
+                requiredRoles: roles 
+            });
+        }
+        console.log('User authorized');
         next(); // User has permission, proceed to next middleware
     };
 };
@@ -149,10 +196,15 @@ app.get('/courses', authenticateToken, async (req, res) => {
 
 // POST a new course to the database (Lecturer/Admin only)
 app.post('/courses', authenticateToken, authorizeRole(['lecturer', 'administrator']), async (req, res) => {
+    console.log('Course creation request received');
+    console.log('User:', req.user);
+    console.log('Request body:', req.body);
+    
     // Validate input: require code, title, lecturer, credits, hours, location, classroom (string)
     const requiredFields = ['code', 'title', 'lecturer', 'credits', 'hours', 'location', 'classroom'];
     for (const field of requiredFields) {
         if (req.body[field] === undefined || req.body[field] === null || (typeof req.body[field] === 'string' && req.body[field].trim() === '')) {
+            console.log(`Missing required field: ${field}`);
             return res.status(400).json({ error: `Course ${field} is required.` });
         }
     }
